@@ -1,5 +1,6 @@
 from tkinter import *
 import tkinter as tk 
+import pygame as py
 
 # create root window
 root = Tk()
@@ -17,6 +18,9 @@ def on_button_click():
     label.config(text="Tombol telah diklik!") 
 
 button = tk.Button(root, text="Mulai Belajar", command=on_button_click) 
+button.pack()  # Menampilkan tombol di jendela 
+
+button = tk.Button(root, text="Keluar", command=root.destroy) 
 button.pack()  # Menampilkan tombol di jendela 
 
 # all widgets will be here
