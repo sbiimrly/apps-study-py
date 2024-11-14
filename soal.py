@@ -1,87 +1,99 @@
+import pygame
 import tkinter as tk
 from tkinter import messagebox
-import pygame
+from PIL import Image, ImageTk
+import random
+import os
 
-# Inisialisasi pygame
-pygame.init()
+# Inisialisasi pygame untuk suara
+pygame.mixer.init()
 
-# Setting ukuran window untuk pygame
-screen_width, screen_height = 800, 600
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Aplikasi Belajar Bahasa Jepang")
+# Daftar soal
+soal_list = [
+    {
+        "gambar": "hiragana.png",  # Ganti dengan path gambar
+        "teks": "Apa arti kata ini?",  # Teks soal
+        "jawaban": "besar",  # Jawaban yang benar
+        "opsi": ["besar", "kecil", "tinggi"]  # Opsi jawaban
+    },
+    {
+        "gambar": "mijika.png",  # Ganti dengan path gambar
+        "teks": "Apa arti kata ini?",
+        "jawaban": "pendek",
+        "opsi": ["tinggi", "pendek", "cantik"]
+    },
+        {
+        "gambar": "anzen.png",  # Ganti dengan path gambar
+        "teks": "Apa arti kata ini?",
+        "jawaban": "aman",
+        "opsi": ["aman", "enak", "lapar"]
+    },
+    # Tambahkan soal-soal lainnya di sini
+]
 
-# Warna yang digunakan
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
+# Inisialisasi window Tkinter
+root = tk.Tk()
+root.title("Aplikasi Belajar Bahasa Jepang")
+root.geometry("600x400")
 
-# Font untuk pygame dan tkinter
-font_pygame = pygame.font.SysFont("Arial", 30)
-font_tkinter = ("Arial", 14)
+# Variabel skor
+skor = 0
 
-# Data untuk soal
-soal = {
-    "gambar": "hiragana.png",  # Ganti dengan path gambar kanji Anda
-    "jawaban_benar": "おおきい",  # Misalnya jawaban yang benar dalam hiragana
-}
+# Fungsi untuk memainkan suara "Hore!"
+def play_sound():
+    pygame.mixer.music.load("horw.mp3")  # Ganti dengan file suara "hore" Anda
+    pygame.mixer.music.play()
 
-# Variabel poin
-poin = 0
+# Fungsi untuk memperbarui soal
+def next_question():
+    global soal
+    soal = random.choice(soal_list)  # Pilih soal secara acak
+    image = Image.open(soal["gambar"])
+    image = image.resize((250, 250))  # Sesuaikan ukuran gambar
+    photo = ImageTk.PhotoImage(image)
 
-# Fungsi untuk menampilkan gambar dan teks di pygame
-def tampilkan_gambar():
-    gambar = pygame.image.load(soal["gambar"])
-    gambar = pygame.transform.scale(gambar, (400, 400))
-    screen.fill(WHITE)
-    screen.blit(gambar, (200, 100))
-    # Menampilkan teks instruksi
-    teks = font_pygame.render("Masukkan jawaban Anda:", True, BLACK)
-    screen.blit(teks, (300, 520))
+    # Update gambar soal
+    label_gambar.config(image=photo)
+    label_gambar.image = photo
+
+    # Update teks soal
+    label_soal.config(text=soal["teks"])
+
+    # Acak dan tampilkan opsi jawaban
+    random.shuffle(soal["opsi"])
+    for i, btn in enumerate(btn_opsi):
+        btn.config(text=soal["opsi"][i])
 
 # Fungsi untuk mengecek jawaban
 def cek_jawaban(jawaban):
-    global poin
-    if jawaban == soal["jawaban_benar"]:
-        poin += 5
-        messagebox.showinfo("Jawaban Benar!", f"Jawaban Anda benar! Poin: {poin}")
+    global skor
+    if jawaban == soal["jawaban"]:
+        skor += 10
+        play_sound()  # Mainkan suara "Hore!"
+        messagebox.showinfo("Benar!", f"Jawaban benar! Skor Anda: {skor}")
     else:
-        messagebox.showwarning("Jawaban Salah", f"Jawaban Anda salah. Poin: {poin}")
-
-# Fungsi untuk membuat jendela Tkinter dan menangani input teks
-def create_tkinter_window():
-    global poin
+        messagebox.showinfo("Salah!", f"Jawaban salah. Skor Anda: {skor}")
     
-    def kirim():
-        jawaban = entry.get()
-        cek_jawaban(jawaban)
-        entry.delete(0, tk.END)  # Kosongkan input setelah kirim
-        root.after(1000, main_game)  # Kembali ke tampilan utama setelah 1 detik
+    # Tampilkan soal berikutnya
+    next_question()
 
-    # Membuat jendela tkinter
-    root = tk.Tk()
-    root.title("Input Jawaban")
-    
-    label = tk.Label(root, text="Arti kata tersebut (Latin):", font=font_tkinter)
-    label.pack(pady=10)
+# Label untuk menampilkan soal gambar
+label_gambar = tk.Label(root)
+label_gambar.pack(pady=20)
 
-    entry = tk.Entry(root, font=font_tkinter)
-    entry.pack(pady=10)
+# Label untuk menampilkan soal teks
+label_soal = tk.Label(root, text="", font=("Arial", 16))
+label_soal.pack(pady=10)
 
-    button = tk.Button(root, text="Kirim", font=font_tkinter, command=kirim)
-    button.pack(pady=20)
-    
-    root.mainloop()
+# Tombol untuk memilih opsi jawaban
+btn_opsi = []
+for i in range(3):  # Misalnya ada 3 opsi jawaban
+    btn = tk.Button(root, text="", font=("Arial", 14), command=lambda i=i: cek_jawaban(btn_opsi[i].cget("text")))
+    btn.pack(pady=5)
+    btn_opsi.append(btn)
 
-# Fungsi utama untuk menjalankan aplikasi
-def main_game():
-    tampilkan_gambar()
-    pygame.display.update()
-    
-    # Membuka jendela Tkinter untuk input jawaban
-    create_tkinter_window()
+# Tampilkan soal pertama
+next_question()
 
-# Menjalankan aplikasi
-main_game()
-
-# Menutup pygame saat aplikasi ditutup
-pygame.quit()
+# Mulai aplikasi
+root.mainloop()
